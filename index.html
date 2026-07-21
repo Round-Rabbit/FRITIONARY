@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Lingu Kartu — Belajar Bahasa dari PDF-mu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+:root{
+  --bg:#FFFFFF;
+  --bg-soft:#F1F8FD;
+  --sky:#4E9FD1;
+  --sky-deep:#2C6E96;
+  --sky-pale:#E3F2FB;
+  --gold:#C99A2E;
+  --gold-deep:#9C7717;
+  --gold-pale:#FBF0D9;
+  --ink:#1E2A38;
+  --muted:#54626F;
+  --success:#2F8F6B;
+  --success-pale:#E4F6EF;
+  --danger:#C0392B;
+  --danger-pale:#FCE9E6;
+  --border:#D9E7F0;
+}
+*{box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;}
+body{
+  margin:0;
+  background:linear-gradient(180deg, var(--bg-soft) 0%, var(--bg) 320px);
+  color:var(--ink);
+  font-family:'Inter',sans-serif;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:'IBM Plex Mono',monospace;}
+.serif{font-family:'Fraunces',serif;}
+.wrap{max-width:760px;margin:0 auto;padding:clamp(18px,4vw,36px) clamp(14px,4vw,24px) 90px;}
+.eyebrow{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--sky-deep);margin:0 0 6px;font-weight:600;
+}
+h1.title{
+  font-family:'Fraunces',serif;font-weight:700;font-size:clamp(22px,5.5vw,32px);margin:0 0 4px;
+  color:var(--ink);line-height:1.15;
+}
+.sub{color:var(--muted);font-size:clamp(12.5px,3vw,14px);margin:0 0 24px;line-height:1.5;}
+.card{
+  background:#fff;color:var(--ink);
+  border-radius:10px;
+  padding:clamp(18px,4vw,28px);
+  position:relative;
+  box-shadow:0 12px 30px -18px rgba(30,70,100,.25);
+  border:1px solid var(--border);
+}
+.tab{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  background:var(--sky);color:#fff;
+  padding:5px 11px;border-radius:20px;margin-bottom:16px;font-weight:600;
+}
+.folder-box{
+  border:2px dashed var(--sky);border-radius:10px;background:var(--sky-pale);
+  padding:clamp(24px,6vw,40px) clamp(14px,4vw,20px);text-align:center;
+}
+.folder-box .icon{font-size:34px;margin-bottom:8px;}
+.folder-box h3{margin:0 0 6px;font-family:'Fraunces',serif;font-size:19px;color:var(--ink);}
+.folder-box p{margin:0 0 16px;font-size:12.5px;color:var(--muted);}
+.file-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:16px;}
+.file-card{
+  background:#fff;border:1.5px solid var(--border);border-radius:8px;padding:14px 12px;
+  cursor:pointer;text-align:left;transition:.12s;
+}
+.file-card:hover{border-color:var(--gold);transform:translateY(-2px);}
+.file-card .fname{font-weight:600;font-size:13px;color:var(--ink);word-break:break-word;}
+.file-card .fmeta{font-size:11px;color:var(--muted);margin-top:3px;font-family:'IBM Plex Mono',monospace;}
+.btn{
+  font-family:'Inter',sans-serif;font-weight:600;font-size:14px;
+  border:none;border-radius:8px;padding:12px 22px;cursor:pointer;transition:.12s;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.btn-primary{background:var(--ink);color:#fff;}
+.btn-primary:hover{background:#000;}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;}
+.btn-accent{background:var(--gold);color:#2B1C02;}
+.btn-accent:hover{background:var(--gold-deep);color:#fff;}
+.btn-sky{background:var(--sky);color:#fff;}
+.btn-sky:hover{background:var(--sky-deep);}
+.btn-outline{background:#fff;color:var(--sky-deep);border:2px solid var(--sky-deep);}
+.btn-outline:hover{background:var(--sky-pale);}
+.btn-ghost{background:transparent;color:var(--muted);border:1.5px solid var(--border);}
+.btn-ghost:hover{border-color:var(--sky-deep);color:var(--sky-deep);}
+.btn-danger{background:var(--danger);color:#fff;}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;}
+.choice-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-top:18px;}
+.choice-card{
+  border:1.5px solid var(--border);border-radius:10px;padding:18px;cursor:pointer;
+  transition:.12s;text-align:left;background:#fff;
+}
+.choice-card:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 8px 20px -12px rgba(30,70,100,.25);}
+.choice-card h3{margin:0 0 4px;font-family:'Fraunces',serif;font-size:17px;color:var(--ink);}
+.choice-card p{margin:0;font-size:12.5px;color:var(--muted);}
+.progressbar{height:7px;background:var(--sky-pale);border-radius:4px;overflow:hidden;margin:6px 0 20px;}
+.progressbar-fill{height:100%;background:var(--gold);transition:width .3s;}
+.flashcard{
+  min-height:220px;border-radius:12px;background:linear-gradient(160deg,#fff 0%,var(--sky-pale) 130%);
+  border:1.5px solid var(--sky);display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:clamp(20px,5vw,32px);position:relative;
+}
+.flashcard .word{font-family:'Fraunces',serif;font-size:clamp(24px,7vw,32px);font-weight:700;margin-bottom:10px;color:var(--ink);word-break:break-word;}
+.flashcard .ctx{font-size:13px;color:var(--muted);font-style:italic;max-width:92%;line-height:1.5;}
+.flashcard .hint{font-size:11px;color:var(--sky-deep);margin-top:16px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.08em;font-weight:600;}
+.pill{
+  display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;
+  background:var(--sky-pale);color:var(--sky-deep);padding:5px 11px;border-radius:20px;margin-right:6px;
+}
+.timer-pill{
+  display:inline-flex;font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:15px;
+  color:var(--danger);background:var(--danger-pale);padding:6px 14px;border-radius:20px;margin-bottom:14px;
+}
+.mcq-opt{
+  display:block;width:100%;text-align:left;padding:14px 16px;margin-bottom:10px;
+  border:1.5px solid var(--border);border-radius:8px;background:#fff;cursor:pointer;font-size:14.5px;color:var(--ink);
+}
+.mcq-opt:hover:not(:disabled){border-color:var(--gold);}
+.mcq-opt.correct{background:var(--success-pale);border-color:var(--success);color:#1c4f3c;font-weight:600;}
+.mcq-opt.wrong{background:var(--danger-pale);border-color:var(--danger);color:#7a281e;}
+.mcq-opt:disabled{cursor:default;}
+input[type=text],textarea{
+  width:100%;padding:12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;
+  font-family:'Inter',sans-serif;color:var(--ink);background:#fff;
+}
+input[type=text]:focus,textarea:focus{outline:none;border-color:var(--sky);}
+textarea{min-height:120px;resize:vertical;}
+.footer-note{font-size:11.5px;color:var(--muted);margin-top:22px;text-align:center;line-height:1.5;}
+.top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px;flex-wrap:wrap;}
+.link-btn{
+  background:var(--sky-pale);border:none;color:var(--sky-deep);
+  text-decoration:none;cursor:pointer;font-size:12px;padding:7px 12px;border-radius:20px;font-weight:600;
+}
+.link-btn:hover{background:var(--sky);color:#fff;}
+.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin:16px 0;}
+.stat{background:var(--sky-pale);color:var(--ink);padding:14px;border-radius:10px;}
+.stat .n{font-family:'Fraunces',serif;font-size:24px;font-weight:700;color:var(--sky-deep);}
+.stat .l{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;}
+.text-link{background:none;border:none;color:var(--sky-deep);text-decoration:underline;cursor:pointer;font-size:12.5px;padding:0;}
+@media(max-width:400px){
+  .btn{padding:11px 16px;font-size:13.5px;width:100%;justify-content:center;}
+  .btn-row{flex-direction:column;}
+}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+const STORE_KEY_LAST = "linguKartu:lastId";
+const pdfjsLib = window['pdfjs-dist/build/pdf'];
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const STOPWORDS_EN = new Set("a,an,the,is,are,was,were,be,been,being,to,of,and,or,but,in,on,at,for,with,as,by,that,this,these,those,it,its,he,she,they,we,you,i,his,her,their,our,your,my,not,no,do,does,did,have,has,had,will,would,shall,should,can,could,may,might,must,so,if,then,than,there,here,what,when,where,who,which,how,from,up,down,out,about,into,over,under,again,further,once,too,very,just,also,after,before,because,while,all,each,few,more,most,other,some,such,only,own,same,than,through,during,above,below,between,off,against,among".split(","));
+
+// ---------- storage abstraction: window.storage if available (Claude artifact), else localStorage fallback ----------
+const hasClaudeStorage = () => (typeof window.storage !== 'undefined' && window.storage && typeof window.storage.set === 'function');
+const storageAPI = {
+  async get(key){
+    if(hasClaudeStorage()){
+      try{ return await window.storage.get(key); }catch(e){ /* fall through */ }
+    }
+    try{
+      const v = localStorage.getItem(key);
+      return v!==null ? {key,value:v} : null;
+    }catch(e){ return null; }
+  },
+  async set(key, value){
+    if(hasClaudeStorage()){
+      try{ return await window.storage.set(key, value); }catch(e){ /* fall through */ }
+    }
+    try{ localStorage.setItem(key, value); return {key,value}; }catch(e){ console.error('storage set failed', e); return null; }
+  },
+  async delete(key){
+    if(hasClaudeStorage()){
+      try{ return await window.storage.delete(key); }catch(e){ /* fall through */ }
+    }
+    try{ localStorage.removeItem(key); return {key,deleted:true}; }catch(e){ return null; }
+  }
+};
+
+async function saveSession(id, data){
+  try{ await storageAPI.set('session:'+id, JSON.stringify(data)); }catch(e){ console.error(e); }
+  try{ await storageAPI.set(STORE_KEY_LAST, id); }catch(e){}
+}
+async function loadSession(id){
+  try{
+    const r = await storageAPI.get('session:'+id);
+    return r ? JSON.parse(r.value) : null;
+  }catch(e){ return null; }
+}
+async function getLastId(){
+  try{
+    const r = await storageAPI.get(STORE_KEY_LAST);
+    return r ? r.value : null;
+  }catch(e){ return null; }
+}
+function simpleHash(str){
+  let h = 0;
+  for(let i=0;i<str.length;i++){ h = (Math.imul(31,h) + str.charCodeAt(i))|0; }
+  return 'pdf_' + Math.abs(h).toString(36) + '_' + str.length.toString(36);
+}
+
+// ---------- language detection ----------
+function detectLanguage(text){
+  const jpChars = (text.match(/[\u3040-\u30FF\u4E00-\u9FFF]/g)||[]).length;
+  if(jpChars > 30) return 'ja';
+  return 'en';
+}
+
+// ---------- vocab extraction ----------
+function extractSentencesEN(text){
+  return text.replace(/\s+/g,' ').split(/(?<=[.!?])\s+/).map(s=>s.trim()).filter(s=>s.split(' ').length>=3 && s.length<220);
+}
+function extractVocabEN(text){
+  const words = (text.toLowerCase().match(/[a-z']+/g)||[]);
+  const freq = {};
+  words.forEach(w=>{
+    if(w.length<3 || STOPWORDS_EN.has(w)) return;
+    freq[w] = (freq[w]||0)+1;
+  });
+  return Object.keys(freq).sort((a,b)=>freq[b]-freq[a]);
+}
+function extractVocabJA(text){
+  const runs = text.match(/[\u4E00-\u9FFF\u30A0-\u30FF]{1,6}/g)||[];
+  const freq={};
+  runs.forEach(w=>{ if(w.length>=1){ freq[w]=(freq[w]||0)+1; } });
+  return Object.keys(freq).sort((a,b)=>freq[b]-freq[a]);
+}
+function findContextSentence(word, sentences){
+  const s = sentences.find(s => new RegExp('\\b'+word.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i').test(s));
+  return s || null;
+}
+
+function questionBudget(pageCount){
+  const capped = Math.min(pageCount, 3);
+  return Math.min(30, capped * 30);
+}
+
+// ---------- app state ----------
+let state = { screen:'home' };
+
+function render(){
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  const fn = SCREENS[state.screen];
+  app.appendChild(fn());
+}
+
+function el(tag, attrs={}, children=[]){
+  const e = document.createElement(tag);
+  Object.entries(attrs).forEach(([k,v])=>{
+    if(k==='class') e.className=v;
+    else if(k==='html') e.innerHTML=v;
+    else if(k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else e.setAttribute(k,v);
+  });
+  (Array.isArray(children)?children:[children]).forEach(c=>{
+    if(typeof c==='string') e.appendChild(document.createTextNode(c));
+    else if(c) e.appendChild(c);
+  });
+  return e;
+}
+function shuffle(arr){ return [...arr].sort(()=>Math.random()-0.5); }
+
+// ===================== SCREENS =====================
+const SCREENS = {};
+
+SCREENS.home = () => {
+  const wrap = el('div');
+  wrap.appendChild(el('p',{class:'eyebrow'}, 'LINGU KARTU · KATALOG BELAJAR'));
+  wrap.appendChild(el('h1',{class:'title'}, 'Ubah PDF-mu jadi sesi belajar bahasa'));
+  wrap.appendChild(el('p',{class:'sub'}, 'Pilih folder berisi materimu — dongeng, artikel, atau catatan kosakata — otomatis jadi flashcard, kuis, dan latihan menulis.'));
+
+  const card = el('div',{class:'card'});
+  card.appendChild(el('div',{class:'tab'}, '01 · Pilih Materi'));
+
+  const box = el('div',{class:'folder-box'});
+  box.appendChild(el('div',{class:'icon'},'📁'));
+  box.appendChild(el('h3',{},'Pilih folder tempat PDF kamu'));
+  box.appendChild(el('p',{},'Izinkan akses ke folder yang berisi materi belajar (maks 3 halaman per PDF untuk hasil terbaik).'));
+  const btnRow = el('div',{class:'btn-row',style:'justify-content:center;'});
+  btnRow.appendChild(el('button',{class:'btn btn-accent',onclick:pickFolder}, '📁 Pilih Folder'));
+  box.appendChild(btnRow);
+  box.appendChild(el('div',{style:'margin-top:12px;'}, el('button',{class:'text-link',onclick:()=>document.getElementById('multi-input').click()}, 'atau pilih file PDF langsung (tanpa folder)')));
+  card.appendChild(box);
+
+  const fileListWrap = el('div',{id:'file-list'});
+  card.appendChild(fileListWrap);
+
+  const status = el('div',{id:'upload-status',style:'margin-top:14px;font-size:13px;color:var(--muted);'});
+  card.appendChild(status);
+
+  // hidden inputs (fallbacks)
+  const dirInput = el('input',{type:'file',id:'dir-input',webkitdirectory:'',directory:'',multiple:'',accept:'application/pdf',style:'display:none',onchange:(e)=>handleFileListInput(e.target.files)});
+  const multiInput = el('input',{type:'file',id:'multi-input',multiple:'',accept:'application/pdf',style:'display:none',onchange:(e)=>handleFileListInput(e.target.files)});
+  card.appendChild(dirInput);
+  card.appendChild(multiInput);
+
+  wrap.appendChild(card);
+  wrap.appendChild(el('div',{class:'footer-note'},'Versi ini 100% jalan di browser kamu, tanpa AI dan tanpa biaya. File tidak diupload ke server manapun.'));
+
+  getLastId().then(async id=>{
+    if(!id) return;
+    const sess = await loadSession(id);
+    if(sess && sess.stage && sess.stage !== 'done'){
+      const resumeCard = el('div',{class:'card',style:'margin-top:18px;'});
+      resumeCard.appendChild(el('div',{class:'tab',style:'background:var(--gold);'},'PROGRES TERSIMPAN'));
+      resumeCard.appendChild(el('h3',{class:'serif',style:'margin:0 0 6px;'}, 'Udah selesai istirahatnya? Lanjut belajar yuk!'));
+      resumeCard.appendChild(el('p',{style:'font-size:13px;color:var(--muted);margin:0 0 14px;'}, `Materi: ${sess.pdfName} · Level: ${sess.level} · Bahasa: ${sess.language==='ja'?'Jepang':'Inggris'}`));
+      const btns = el('div',{class:'btn-row'});
+      btns.appendChild(el('button',{class:'btn btn-accent',onclick:()=>{ state = sess; render(); }}, 'Yuk, Lanjut!'));
+      btns.appendChild(el('button',{class:'btn btn-ghost',onclick:async()=>{ await storageAPI.delete('session:'+id); resumeCard.remove(); }}, 'Mulai baru aja'));
+      resumeCard.appendChild(btns);
+      card.after(resumeCard);
+    }
+  });
+
+  return wrap;
+};
+
+async function pickFolder(){
+  const status = document.getElementById('upload-status');
+  if(window.showDirectoryPicker){
+    try{
+      status.textContent = 'Membuka folder...';
+      const dirHandle = await window.showDirectoryPicker();
+      const entries = [];
+      for await (const [name, handle] of dirHandle.entries()){
+        if(handle.kind==='file' && name.toLowerCase().endsWith('.pdf')){
+          entries.push({name, handle});
+        }
+      }
+      status.textContent = '';
+      if(entries.length===0){ status.textContent = 'Gak ada file PDF di folder itu. Coba folder lain.'; return; }
+      renderFileGrid(entries.map(e=>({name:e.name, getFile:()=>e.handle.getFile()})));
+    }catch(err){
+      status.textContent = (err.name==='AbortError') ? '' : 'Gagal buka folder — coba tombol "pilih file PDF langsung" di bawah.';
+    }
+  } else {
+    // browser doesn't support File System Access API — fall back to webkitdirectory input
+    document.getElementById('dir-input').click();
+  }
+}
+
+function handleFileListInput(fileList){
+  const status = document.getElementById('upload-status');
+  const files = Array.from(fileList).filter(f => f.name.toLowerCase().endsWith('.pdf'));
+  if(files.length===0){ status.textContent = 'Gak ada file PDF yang kepilih. Coba lagi ya.'; return; }
+  status.textContent = '';
+  renderFileGrid(files.map(f=>({name:f.name, getFile:()=>Promise.resolve(f)})));
+}
+
+function renderFileGrid(items){
+  const listWrap = document.getElementById('file-list');
+  listWrap.innerHTML = '';
+  listWrap.appendChild(el('p',{style:'font-size:12.5px;color:var(--muted);margin:16px 0 4px;font-weight:600;'}, `${items.length} PDF ditemukan — pilih salah satu:`));
+  const grid = el('div',{class:'file-grid'});
+  items.forEach(item=>{
+    grid.appendChild(el('div',{class:'file-card',onclick:()=>loadPdfFile(item)},[
+      el('div',{class:'fname'}, '📄 '+item.name),
+      el('div',{class:'fmeta'}, 'Tap untuk mulai')
+    ]));
+  });
+  listWrap.appendChild(grid);
+}
+
+async function loadPdfFile(item){
+  const status = document.getElementById('upload-status');
+  status.textContent = 'Lagi baca PDF-nya...';
+  try{
+    const file = await item.getFile();
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({data:buf}).promise;
+    let fullText = '';
+    for(let i=1;i<=pdf.numPages;i++){
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      fullText += content.items.map(it=>it.str).join(' ') + ' ';
+    }
+    if(fullText.trim().length < 20){
+      status.textContent = 'Teksnya kependekan atau PDF ini hasil scan gambar (belum bisa dibaca). Coba PDF lain ya.';
+      return;
+    }
+    const id = simpleHash(fullText);
+    const language = detectLanguage(fullText);
+    const pageCount = pdf.numPages;
+    state = { screen:'ask-level', pdfName:file.name, id, fullText, language, pageCount, stage:'setup' };
+    await saveSession(id, state);
+    render();
+  }catch(err){
+    console.error(err);
+    status.textContent = 'Gagal baca PDF ini. Pastikan filenya PDF teks (bukan hasil scan foto).';
+  }
+}
+
+SCREENS['ask-level'] = () => {
+  const wrap = el('div');
+  wrap.appendChild(el('p',{class:'eyebrow'},'02 · KALIBRASI'));
+  wrap.appendChild(el('h1',{class:'title'}, `Materi: ${state.language==='ja'?'Bahasa Jepang':'Bahasa Inggris'} terdeteksi`));
+  wrap.appendChild(el('p',{class:'sub'}, `${state.pdfName} · ${state.pageCount} halaman`));
+  const card = el('div',{class:'card'});
+  card.appendChild(el('div',{class:'tab'},'LEVEL KEMAHIRAN'));
+  card.appendChild(el('h3',{class:'serif',style:'margin:0 0 4px;'}, 'Ini pertama kali kamu belajar bahasa ini, atau udah paham beberapa kosakata?'));
+  card.appendChild(el('p',{style:'font-size:12.5px;color:var(--muted);margin:0 0 16px;'}, 'Jujur aja: belum ada mode Advanced karena aplikasi ini emang paling optimal buat pemula sampai menengah.'));
+
+  const grid = el('div',{class:'choice-grid'});
+  grid.appendChild(el('div',{class:'choice-card',onclick:()=>pickLevel('beginner')},[
+    el('h3',{},'🌱 Beginner'),
+    el('p',{},'Baru pertama kali. Flashcard diulang 3 sesi biar makin nempel.')
+  ]));
+  grid.appendChild(el('div',{class:'choice-card',onclick:()=>pickLevel('intermediate')},[
+    el('h3',{},'📘 Intermediate'),
+    el('p',{},'Udah paham sebagian kosakata. Flashcard cukup 1 sesi.')
+  ]));
+  card.appendChild(grid);
+  wrap.appendChild(card);
+  return wrap;
+};
+
+async function pickLevel(level){
+  state.level = level;
+  state.screen = 'ask-mode';
+  await saveSession(state.id, state);
+  render();
+}
+
+SCREENS['ask-mode'] = () => {
+  const wrap = el('div');
+  wrap.appendChild(el('p',{class:'eyebrow'},'03 · MODE BELAJAR'));
+  wrap.appendChild(el('h1',{class:'title'}, 'Santai atau ngebut?'));
+  const card = el('div',{class:'card'});
+  const grid = el('div',{class:'choice-grid'});
+  grid.appendChild(el('div',{class:'choice-card',onclick:()=>pickMode('normal')},[
+    el('h3',{},'🍵 Normal'),
+    el('p',{},'Tanpa timer, belajar santai sesuai ritme kamu.')
+  ]));
+  grid.appendChild(el('div',{class:'choice-card',onclick:()=>pickMode('hard')},[
+    el('h3',{},'⏱️ Hard'),
+    el('p',{},'Ada timer di tiap soal pilihan ganda & fill in the blank.')
+  ]));
+  card.appendChild(grid);
+  wrap.appendChild(card);
+  return wrap;
+};
+
+function buildVocabAndQuestions(){
+  const isJA = state.language === 'ja';
+  const sentences = isJA ? [] : extractSentencesEN(state.fullText);
+  let vocab = isJA ? extractVocabJA(state.fullText) : extractVocabEN(state.fullText);
+  vocab = vocab.slice(0, 60);
+  const budget = questionBudget(state.pageCount);
+
+  const cards = vocab.map(w => ({
+    word: w,
+    context: isJA ? null : findContextSentence(w, sentences)
+  }));
+
+  const mcq = [];
+  const fib = [];
+  if(!isJA){
+    let pool = sentences.filter(s => vocab.some(w=> new RegExp('\\b'+w+'\\b','i').test(s)));
+    if(pool.length===0) pool = sentences;
+    let i=0;
+    while(mcq.length < budget && pool.length>0){
+      const s = pool[i % pool.length];
+      const target = vocab.find(w => new RegExp('\\b'+w+'\\b','i').test(s));
+      if(target){
+        const distractors = shuffle(vocab.filter(w=>w!==target)).slice(0,3);
+        const options = shuffle([target, ...distractors]);
+        const blanked = s.replace(new RegExp('\\b'+target+'\\b','i'), '_____');
+        mcq.push({ sentence: blanked, answer: target, options });
+        fib.push({ sentence: blanked, answer: target });
+      }
+      i++;
+      if(i > pool.length*3) break;
+    }
+  } else {
+    let i=0;
+    while(mcq.length < Math.min(budget, vocab.length*2) && vocab.length>1){
+      const target = vocab[i % vocab.length];
+      const distractors = shuffle(vocab.filter(w=>w!==target)).slice(0,3);
+      if(distractors.length<3) break;
+      mcq.push({ sentence: `Kata ini muncul di teks. Pilih kata yang sama persis dengan: "${target}"`, answer: target, options: shuffle([target,...distractors]) });
+      fib.push({ sentence: `Tulis ulang kata ini persis: ${target[0]}${'_'.repeat(Math.max(1,target.length-1))}`, answer: target });
+      i++;
+      if(i>vocab.length*3) break;
+    }
+  }
+
+  state.vocab = cards;
+  state.mcqPool = mcq;
+  state.fibPool = fib;
+}
+
+async function pickMode(mode){
+  state.mode = mode;
+  buildVocabAndQuestions();
+  state.flashSession = 1;
+  state.flashTotalSessions = state.level==='beginner' ? 3 : 1;
+  state.flashIdx = 0;
+  state.flashDeck = state.vocab.map(v=>v.word);
+  state.masteredThisRound = [];
+  state.stage = 'flashcard';
+  state.screen = 'flashcard';
+  await saveSession(state.id, state);
+  render();
+}
+
+// -------- FLASHCARD --------
+SCREENS.flashcard = () => {
+  const wrap = el('div');
+  topBar(wrap);
+  wrap.appendChild(el('p',{class:'eyebrow'}, `STAGE FLASHCARD · SESI ${state.flashSession}/${state.flashTotalSessions}`));
+  wrap.appendChild(el('h1',{class:'title'}, 'Hapalin kosakatanya dulu'));
+
+  const total = state.flashDeck.length;
+  const pct = total ? Math.round((state.flashIdx/total)*100) : 0;
+  wrap.appendChild(el('div',{class:'progressbar'}, el('div',{class:'progressbar-fill',style:`width:${pct}%`})));
+
+  if(state.flashIdx >= total){
+    return renderFlashSessionEnd(wrap);
+  }
+
+  const word = state.flashDeck[state.flashIdx];
+  const cardData = state.vocab.find(v=>v.word===word);
+  const fc = el('div',{class:'flashcard'});
+  fc.appendChild(el('div',{class:'word'}, word));
+  if(cardData && cardData.context){
+    fc.appendChild(el('div',{class:'ctx'}, '"' + cardData.context + '"'));
+  }
+  fc.appendChild(el('div',{class:'hint'}, `Kartu ${state.flashIdx+1} dari ${total}`));
+  wrap.appendChild(fc);
+
+  const btnRow = el('div',{class:'btn-row'});
+  btnRow.appendChild(el('button',{class:'btn btn-accent',onclick:()=>flashAnswer(word,true)}, '✓ Sudah Paham'));
+  btnRow.appendChild(el('button',{class:'btn btn-outline',onclick:()=>flashAnswer(word,false)}, '✗ Belum Paham'));
+  wrap.appendChild(btnRow);
+  return wrap;
+};
+
+async function flashAnswer(word, understood){
+  if(understood) state.masteredThisRound.push(word);
+  state.flashIdx++;
+  await saveSession(state.id, state);
+  render();
+}
+
+function renderFlashSessionEnd(wrap){
+  const notMastered = state.flashDeck.filter(w=>!state.masteredThisRound.includes(w));
+  const card = el('div',{class:'card'});
+  if(state.flashSession < state.flashTotalSessions){
+    card.appendChild(el('h3',{class:'serif'}, 'Ayo ulang lagi yaa! 🔁'));
+    card.appendChild(el('p',{style:'font-size:13px;color:var(--muted);'}, `Sesi ${state.flashSession} selesai. ${notMastered.length>0? notMastered.length+' kata masih perlu diulang.' : 'Semua kata udah kamu tandai paham, tapi kita ulang sekali lagi biar makin nempel.'}`));
+    card.appendChild(el('button',{class:'btn btn-accent',onclick: async ()=>{
+      state.flashSession++;
+      state.flashDeck = notMastered.length>0 ? shuffle(notMastered) : shuffle(state.vocab.map(v=>v.word));
+      state.flashIdx = 0;
+      state.masteredThisRound = [];
+      await saveSession(state.id, state);
+      render();
+    }}, `Lanjut Sesi ${state.flashSession+1}`));
+  } else {
+    card.appendChild(el('h3',{class:'serif'}, 'Selamat! 🎉 Kamu telah menyelesaikan stage flashcard'));
+    card.appendChild(el('p',{style:'font-size:13.5px;color:var(--muted);'}, 'Mau lanjut ke stage berikutnya atau istirahat dulu nih?'));
+    const btns = el('div',{class:'btn-row'});
+    btns.appendChild(el('button',{class:'btn btn-outline',onclick: async ()=>{
+      state.stage='paused'; await saveSession(state.id, state);
+      state.screen='home'; render();
+    }}, 'Istirahat Dulu'));
+    btns.appendChild(el('button',{class:'btn btn-accent',onclick: async ()=>{
+      state.stage='mcq'; state.screen='mcq'; state.mcqIdx=0; state.mcqScore=0;
+      await saveSession(state.id, state); render();
+    }}, 'Yuk, Lanjut!'));
+    card.appendChild(btns);
+  }
+  wrap.appendChild(card);
+  return wrap;
+}
+
+// -------- MCQ --------
+SCREENS.mcq = () => {
+  const wrap = el('div');
+  topBar(wrap);
+  const pool = state.mcqPool;
+  wrap.appendChild(el('p',{class:'eyebrow'},'STAGE PILIHAN GANDA'));
+  wrap.appendChild(el('h1',{class:'title'}, 'Uji pemahamanmu'));
+  if(pool.length===0){
+    const card = el('div',{class:'card'});
+    card.appendChild(el('p',{},'Kosakata di PDF ini kurang untuk bikin soal pilihan ganda. Lanjut ke stage berikutnya aja ya.'));
+    card.appendChild(el('button',{class:'btn btn-accent',onclick:()=>goStage('fib')}, 'Lanjut ke Fill in the Blank'));
+    wrap.appendChild(card);
+    return wrap;
+  }
+  const idx = state.mcqIdx % pool.length;
+  const q = pool[idx];
+  const pct = Math.round((state.mcqIdx/pool.length)*100);
+  wrap.appendChild(el('div',{class:'progressbar'}, el('div',{class:'progressbar-fill',style:`width:${Math.min(pct,100)}%`})));
+  wrap.appendChild(el('div',{},[el('span',{class:'pill'}, `Soal ${state.mcqIdx+1}/${pool.length}`), el('span',{class:'pill'}, `Skor: ${state.mcqScore}`)]));
+
+  const card = el('div',{class:'card',style:'margin-top:14px;'});
+  if(state.mode==='hard'){
+    card.appendChild(renderTimer(()=>autoFailMcq(), 15));
+  }
+  card.appendChild(el('p',{class:'serif',style:'font-size:18px;'}, q.sentence));
+  q.options.forEach(opt=>{
+    const b = el('button',{class:'mcq-opt',onclick:()=>answerMcq(opt,q)}, opt);
+    card.appendChild(b);
+  });
+  wrap.appendChild(card);
+  return wrap;
+};
+
+function renderTimer(onTimeout, seconds){
+  const box = el('div',{class:'timer-pill'}, `⏱ ${seconds}s`);
+  let s = seconds;
+  const interval = setInterval(()=>{
+    s--;
+    box.textContent = `⏱ ${s}s`;
+    if(s<=0){ clearInterval(interval); onTimeout(); }
+  },1000);
+  window.__activeTimer = interval;
+  return box;
+}
+function clearActiveTimer(){ if(window.__activeTimer) clearInterval(window.__activeTimer); }
+
+async function autoFailMcq(){
+  clearActiveTimer();
+  state.mcqIdx++;
+  await saveSession(state.id, state);
+  render();
+}
+
+async function answerMcq(opt, q){
+  clearActiveTimer();
+  document.querySelectorAll('.mcq-opt').forEach(b=>{
+    b.disabled = true;
+    if(b.textContent===q.answer) b.classList.add('correct');
+    if(b.textContent===opt && opt!==q.answer) b.classList.add('wrong');
+  });
+  if(opt===q.answer) state.mcqScore++;
+  await saveSession(state.id, state);
+  setTimeout(async ()=>{
+    state.mcqIdx++;
+    if(state.mcqIdx >= state.mcqPool.length){
+      state.stage='fib'; state.screen='fib'; state.fibIdx=0; state.fibScore=0;
+    }
+    await saveSession(state.id, state);
+    render();
+  }, 700);
+}
+
+async function goStage(stageName){
+  state.stage = stageName; state.screen = stageName;
+  if(stageName==='fib'){ state.fibIdx=0; state.fibScore=0; }
+  await saveSession(state.id, state);
+  render();
+}
+
+// -------- FILL IN THE BLANK --------
+SCREENS.fib = () => {
+  const wrap = el('div');
+  topBar(wrap);
+  const pool = state.fibPool;
+  wrap.appendChild(el('p',{class:'eyebrow'},'STAGE FILL IN THE BLANK'));
+  wrap.appendChild(el('h1',{class:'title'}, 'Coba ingat kembali'));
+  if(pool.length===0){
+    const card = el('div',{class:'card'});
+    card.appendChild(el('p',{},'Belum cukup data buat soal ini. Lanjut ke stage menulis ya.'));
+    card.appendChild(el('button',{class:'btn btn-accent',onclick:()=>goStage('writing')}, 'Lanjut ke Stage Menulis'));
+    wrap.appendChild(card);
+    return wrap;
+  }
+  const idx = state.fibIdx % pool.length;
+  const q = pool[idx];
+  const pct = Math.round((state.fibIdx/pool.length)*100);
+  wrap.appendChild(el('div',{class:'progressbar'}, el('div',{class:'progressbar-fill',style:`width:${Math.min(pct,100)}%`})));
+  wrap.appendChild(el('div',{},[el('span',{class:'pill'}, `Soal ${state.fibIdx+1}/${pool.length}`), el('span',{class:'pill'}, `Skor: ${state.fibScore}`)]));
+
+  const card = el('div',{class:'card',style:'margin-top:14px;'});
+  if(state.mode==='hard'){ card.appendChild(renderTimer(()=>autoFailFib(), 20)); }
+  card.appendChild(el('p',{class:'serif',style:'font-size:17px;'}, q.sentence));
+  const input = el('input',{type:'text',placeholder:'Ketik jawabanmu di sini...',id:'fib-input'});
+  card.appendChild(input);
+  const feedback = el('div',{id:'fib-feedback',style:'margin-top:10px;font-size:13px;'});
+  card.appendChild(feedback);
+  const submit = el('button',{class:'btn btn-primary',style:'margin-top:12px;',onclick:()=>submitFib(q)}, 'Cek Jawaban');
+  card.appendChild(submit);
+  wrap.appendChild(card);
+  setTimeout(()=>input.focus(),50);
+  return wrap;
+};
+
+function autoFailFib(){
+  clearActiveTimer();
+  advanceFib();
+}
+async function submitFib(q){
+  clearActiveTimer();
+  const input = document.getElementById('fib-input');
+  const val = input.value.trim().toLowerCase();
+  const correct = val === q.answer.toLowerCase();
+  const fb = document.getElementById('fib-feedback');
+  fb.textContent = correct ? '✓ Benar!' : `✗ Kurang tepat. Jawaban: ${q.answer}`;
+  fb.style.color = correct ? 'var(--success)' : 'var(--danger)';
+  fb.style.fontWeight = '600';
+  if(correct) state.fibScore++;
+  document.getElementById('fib-input').disabled = true;
+  document.querySelector('button.btn.btn-primary').disabled = true;
+  await saveSession(state.id, state);
+  setTimeout(()=>advanceFib(), 800);
+}
+async function advanceFib(){
+  state.fibIdx++;
+  if(state.fibIdx >= state.fibPool.length){
+    state.stage='writing'; state.screen='writing';
+  }
+  await saveSession(state.id, state);
+  render();
+}
+
+// -------- WRITING --------
+SCREENS.writing = () => {
+  const wrap = el('div');
+  topBar(wrap);
+  wrap.appendChild(el('p',{class:'eyebrow'},'STAGE MENULIS'));
+  wrap.appendChild(el('h1',{class:'title'}, `Coba tulis kalimat pakai kosakata yang udah kamu pelajari`));
+  if(!state.writingSample) state.writingSample = shuffle(state.vocab.map(v=>v.word)).slice(0,5);
+  const sampleWords = state.writingSample;
+  const card = el('div',{class:'card'});
+  card.appendChild(el('p',{style:'font-size:13px;color:var(--muted);'}, 'Coba pakai minimal 3 dari kata berikut dalam satu paragraf pendek:'));
+  const pillRow = el('div',{});
+  sampleWords.forEach(w=> pillRow.appendChild(el('span',{class:'pill'}, w)));
+  card.appendChild(pillRow);
+  const ta = el('textarea',{placeholder:'Tulis di sini...',id:'writing-area',style:'margin-top:14px;'});
+  ta.value = state.writingDraft || '';
+  card.appendChild(ta);
+  const fb = el('div',{id:'writing-feedback',style:'margin-top:12px;font-size:13px;font-weight:600;'});
+  card.appendChild(fb);
+  card.appendChild(el('button',{class:'btn btn-primary',style:'margin-top:12px;',onclick:()=>checkWriting(sampleWords)}, 'Koreksi (cek dasar)'));
+  wrap.appendChild(card);
+  wrap.appendChild(el('div',{class:'footer-note'}, 'Catatan: versi non-AI ini cuma ngecek kata yang kamu pakai, bukan koreksi tata bahasa. Untuk koreksi grammar/makna, coba versi AI ya.'));
+
+  const btns = el('div',{class:'btn-row'});
+  btns.appendChild(el('button',{class:'btn btn-accent',onclick:finishAll}, 'Selesai & Lihat Ringkasan'));
+  wrap.appendChild(btns);
+  return wrap;
+};
+
+async function checkWriting(sampleWords){
+  const val = document.getElementById('writing-area').value;
+  state.writingDraft = val;
+  const lower = val.toLowerCase();
+  const used = sampleWords.filter(w=>lower.includes(w.toLowerCase()));
+  const fb = document.getElementById('writing-feedback');
+  if(used.length===0){
+    fb.textContent = 'Belum ada kata dari daftar yang kepakai nih. Coba lagi ya!';
+    fb.style.color = 'var(--danger)';
+  } else if(used.length<3){
+    fb.textContent = `Baru ${used.length} kata (${used.join(', ')}) yang kepakai. Coba tambah lagi biar lebih 3.`;
+    fb.style.color = 'var(--gold-deep)';
+  } else {
+    fb.textContent = `Mantap! Kamu pakai ${used.length} kata: ${used.join(', ')}. Struktur kalimat cek manual dulu ya, atau pakai versi AI buat koreksi grammar.`;
+    fb.style.color = 'var(--success)';
+  }
+  await saveSession(state.id, state);
+}
+
+async function finishAll(){
+  state.stage = 'done'; state.screen = 'summary';
+  await saveSession(state.id, state);
+  render();
+}
+
+SCREENS.summary = () => {
+  const wrap = el('div');
+  wrap.appendChild(el('p',{class:'eyebrow'},'RINGKASAN'));
+  wrap.appendChild(el('h1',{class:'title'}, 'Sesi belajar selesai! 🎉'));
+  const card = el('div',{class:'card'});
+  const stats = el('div',{class:'stat-row'});
+  stats.appendChild(el('div',{class:'stat'},[el('div',{class:'n'}, String(state.vocab.length)), el('div',{class:'l'},'Kosakata')]));
+  stats.appendChild(el('div',{class:'stat'},[el('div',{class:'n'}, `${state.mcqScore||0}/${state.mcqPool.length}`), el('div',{class:'l'},'Pilihan Ganda')]));
+  stats.appendChild(el('div',{class:'stat'},[el('div',{class:'n'}, `${state.fibScore||0}/${state.fibPool.length}`), el('div',{class:'l'},'Fill in Blank')]));
+  card.appendChild(stats);
+  card.appendChild(el('button',{class:'btn btn-accent',onclick:()=>{ state={screen:'home'}; render(); }}, 'Balik ke Beranda'));
+  wrap.appendChild(card);
+  return wrap;
+};
+
+function topBar(wrap){
+  const bar = el('div',{class:'top-bar'});
+  bar.appendChild(el('span',{class:'pill'}, state.pdfName));
+  bar.appendChild(el('button',{class:'link-btn',onclick: async ()=>{
+    clearActiveTimer();
+    await saveSession(state.id, state);
+    state.screen='home'; render();
+  }}, '💾 Simpan & Istirahat'));
+  wrap.appendChild(bar);
+}
+
+// ---------- boot ----------
+render();
+</script>
+</body>
+</html>
