@@ -2,7 +2,7 @@
 // Naikkan CACHE_VERSION tiap kali kamu update file HTML/CSS/JS biar cache lama kebuang.
 const CACHE_VERSION = 'lingu-kartu-v1';
 const APP_SHELL = [
-  './lingu-kartu.html',
+  './index.html',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
